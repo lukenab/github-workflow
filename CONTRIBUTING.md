@@ -177,8 +177,6 @@ Cấu hình ruleset cho cả `develop` và `main`:
 - Branch công việc vào `develop` dùng squash merge và được xóa sau khi merge.
 - Pull Request từ `develop` vào `main` dùng merge commit.
 
-Do `develop` là default branch, Pull Request mới sẽ mặc định target vào `develop`. Khi chốt phiên
-bản ổn định, chọn `main` làm target và chỉ sử dụng `develop` làm source branch.
 
 ## Commit convention
 
@@ -193,8 +191,7 @@ ci: add pull request checks
 ```
 
 Các type thường dùng: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `build`, `ci`, `chore`.
-Scope nên là module hoặc domain ổn định như `auth`, `booking`, `mobile`, `api`; có thể bỏ scope
-khi thay đổi áp dụng toàn repository.
+Scope nên là module hoặc domain ổn định, có thể bỏ scope khi thay đổi áp dụng toàn repository.
 
 - Mỗi commit tập trung vào một thay đổi có liên quan.
 - Không commit secret, `.env`, credential, dữ liệu cá nhân hoặc file build không cần thiết.
@@ -280,12 +277,6 @@ thay thế integration test cho business rule.
 - Test cần độc lập, ổn định và cleanup dữ liệu khi áp dụng.
 - Flaky test phải được sửa hoặc tạo Issue theo dõi; không tắt test mà không ghi lý do.
 
-### Áp dụng cho các môn
-
-- **SDN302:** ưu tiên unit/integration test cho API, validation, authentication và database.
-- **MMA301:** test logic/state quan trọng; manual test UI trên thiết bị/emulator và ghi kết quả.
-- **SWD392:** kiểm tra tính nhất quán giữa requirement, UML, architecture, database và implementation.
-
 ## Continuous Integration
 
 CI tự động kiểm tra thay đổi trước khi merge, giúp phát hiện sớm lỗi cài dependency, lint, test
@@ -349,13 +340,11 @@ Một Issue là `Done` khi kết quả có thể chạy, review và bàn giao; k
 - [ ] Cấu hình môi trường không bị hardcode vào source code.
 - [ ] Issue đã được đóng và trạng thái trên GitHub Project đã chuyển sang `Done`.
 
-Project có thể dùng trạng thái `Accepted` sau khi demo cho giảng viên hoặc stakeholder. Việc chờ
-buổi demo không cần giữ một Pull Request đã đạt toàn bộ quality checks ở trạng thái mở.
 
 ## Template có thể sao chép
 
 Các file trong `.github/` là bản có hiệu lực trên GitHub. Những block dưới đây phục vụ việc copy
-thủ công sang repository đã tồn tại; khi thay đổi template, cập nhật đồng thời cả hai vị trí.
+thủ công sang repository đã tồn tại.
 
 <details>
 <summary><code>.github/ISSUE_TEMPLATE/issue.md</code></summary>
