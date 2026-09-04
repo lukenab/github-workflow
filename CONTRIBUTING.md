@@ -11,6 +11,7 @@ Tài liệu này mô tả quy trình thống nhất để nhóm quản lý công
 - [Testing](#testing)
 - [Continuous Integration](#continuous-integration)
 - [Definition of Done](#definition-of-done)
+- [Template có thể sao chép](#template-có-thể-sao-chép)
 
 ## Quản lý Issue và Project
 
@@ -30,6 +31,15 @@ và theo dõi trạng thái. Không tạo cùng một task ở nhiều công c�
 Backlog → Ready → In progress → In review → Testing → Done
 ```
 
+| Trạng thái | Điều kiện chuyển vào |
+|---|---|
+| Backlog | Yêu cầu đã được ghi nhận nhưng chưa sẵn sàng thực hiện |
+| Ready | Issue đạt Definition of Ready |
+| In progress | Thành viên nhận Issue và tạo branch công việc |
+| In review | Pull Request đã chuyển từ Draft sang Ready for review |
+| Testing | Review đạt, CI thành công và thay đổi sẵn sàng được kiểm thử |
+| Done | Kiểm thử đạt, Pull Request đã merge và Issue đã đóng |
+
 | Field | Giá trị gợi ý | Mục đích |
 |---|---|---|
 | Status | Các trạng thái ở trên | Theo dõi luồng công việc |
@@ -40,16 +50,28 @@ Backlog → Ready → In progress → In review → Testing → Done
 
 Labels đề xuất: `type:feature`, `type:bug`, `type:task`, `type:docs`, các label `area:*`,
 `blocked` và `security`. Không dùng label cho Status và Estimate nếu đã có Project fields.
-Priority là thứ tự team chọn làm; Severity là mức ảnh hưởng của bug.
+Sau khi tạo Issue, thêm một label `type:*`: Feature dùng `type:feature`, Bug dùng `type:bug`,
+Documentation dùng `type:docs`; Task, Refactor và Test dùng `type:task`. Priority là thứ tự team
+chọn làm; Severity là mức ảnh hưởng của bug.
+
+| Severity | Cách hiểu |
+|---|---|
+| Critical | Lỗ hổng bảo mật, mất dữ liệu hoặc hệ thống không hoạt động |
+| High | Luồng chính không dùng được và không có giải pháp tạm thời |
+| Medium | Chức năng bị ảnh hưởng nhưng có giải pháp tạm thời |
+| Low | Ảnh hưởng nhỏ hoặc chủ yếu về giao diện |
 
 ### Quy tắc sử dụng
 
 - Mỗi thay đổi cần có Issue, trừ chỉnh sửa rất nhỏ được reviewer đồng ý.
 - Một Issue có một người chịu trách nhiệm chính khi ở `In progress`.
 - Khi bắt đầu, assign Issue cho chính mình và chuyển sang `In progress`.
-- Mỗi người giới hạn số task đang làm để ưu tiên hoàn thành trước khi nhận thêm.
+- Mỗi thành viên chỉ thực hiện một Issue tại một thời điểm.
+- Khi Issue bị block, giữ nguyên trạng thái, thêm label `blocked` và ghi rõ nguyên nhân hoặc
+  dependency. Chỉ nhận Issue khác sau khi team thống nhất việc ưu tiên lại.
 - Blocker phải được ghi hoặc liên kết trên Issue, không chỉ báo trong chat.
-- Pull Request dùng `Closes #<id>` để tự đóng Issue sau khi merge.
+- Pull Request vào `develop` ghi `Closes #<id>`. GitHub tự đóng Issue sau khi Pull Request
+  được merge vì `develop` là default branch.
 
 ## Definition of Ready
 
@@ -63,7 +85,7 @@ Một Issue được chuyển sang `Ready` khi các mục áp dụng đều đ�
 - [ ] Không còn câu hỏi có thể làm thay đổi đáng kể scope, kiến trúc, bảo mật hoặc estimate.
 - [ ] Đã nêu cách kiểm thử hoặc demo kết quả.
 - [ ] API contract, UI reference hoặc data model đã có nếu cần làm song song.
-- [ ] Priority, estimate và người phụ trách đã được xác định.
+- [ ] Priority và estimate đã được xác định. Người phụ trách được chỉ định khi bắt đầu thực hiện.
 
 Dùng sub-issues khi cần chia phần việc cho nhiều người hoặc module. Tách Issue nếu có nhiều
 acceptance criteria độc lập hoặc thay đổi không thể review trong một Pull Request. Không trì hoãn
@@ -73,8 +95,8 @@ task chỉ vì câu hỏi nhỏ không ảnh hưởng đến phạm vi hoặc gi
 
 Team dùng GitFlow rút gọn:
 
-- `main`: phiên bản ổn định dùng để demo hoặc nộp bài.
-- `develop`: branch tích hợp cho công việc đang phát triển.
+- `main`: stable branch dùng để demo hoặc nộp bài.
+- `develop`: default branch và branch tích hợp cho công việc đang phát triển.
 - Branch công việc: tạo từ `develop` và merge trở lại `develop`.
 
 ```text
@@ -92,16 +114,28 @@ fix/*             ─────●
 2. Cập nhật `develop` local từ remote.
 3. Tạo branch công việc từ `develop`.
 4. Commit các thay đổi nhỏ, có liên quan.
-5. Push branch; có thể mở Draft Pull Request sớm để nhận feedback.
-6. Mở Pull Request vào `develop`, hoàn thiện test và yêu cầu review.
-7. Khi CI thành công và đủ approval, squash merge vào `develop`.
-8. Xóa branch và chuyển Issue sang `Done` khi đạt Definition of Done.
+5. Push branch và có thể mở Draft Pull Request sớm để nhận feedback.
+6. Khi thay đổi đã sẵn sàng, chuyển Pull Request sang Ready for review và Issue sang `In review`.
+7. Khi review đạt và CI thành công, chuyển Issue sang `Testing`.
+8. Kiểm thử, squash merge vào `develop`, đóng Issue và chuyển sang `Done`.
 
 ```bash
 git switch develop
 git pull --ff-only origin develop
 git switch -c feature/12-login-api
 ```
+
+Khi `develop` có thay đổi liên quan hoặc branch có nguy cơ conflict, đồng bộ bằng merge:
+
+```bash
+git fetch origin
+git switch <working-branch>
+git merge origin/develop
+# Resolve conflict nếu có, sau đó chạy lại test
+git push
+```
+
+Không rebase một branch đang được nhiều người cùng sử dụng nếu chưa thống nhất với team.
 
 ### Đặt tên branch
 
@@ -135,11 +169,16 @@ Thực hiện khi cần demo, nộp bài hoặc team chốt một phiên bản �
 
 Cấu hình ruleset cho cả `develop` và `main`:
 
-- Không push hoặc force-push trực tiếp.
-- Bắt buộc Pull Request, ít nhất một approval và xử lý review conversations.
-- Bắt buộc CI checks khi workflow đã ổn định.
+- Bắt buộc Pull Request và ít nhất một approval từ người khác tác giả.
+- Bắt buộc xử lý toàn bộ review conversations.
+- Bắt buộc status check `verify` khi workflow đã ổn định.
+- Yêu cầu approval cho lần push có thể review gần nhất.
+- Không cho force-push hoặc xóa branch.
 - Branch công việc vào `develop` dùng squash merge và được xóa sau khi merge.
 - Pull Request từ `develop` vào `main` dùng merge commit.
+
+Do `develop` là default branch, Pull Request mới sẽ mặc định target vào `develop`. Khi chốt phiên
+bản ổn định, chọn `main` làm target và chỉ sử dụng `develop` làm source branch.
 
 ## Commit convention
 
@@ -166,18 +205,26 @@ khi thay đổi áp dụng toàn repository.
 - Branch công việc mở Pull Request vào `develop`.
 - `main` chỉ nhận Pull Request từ `develop` khi team chốt phiên bản demo/nộp bài.
 - Không push trực tiếp vào `develop` hoặc `main`.
-- Liên kết Issue bằng `Closes #<id>` khi merge sẽ hoàn thành Issue.
+- Ghi `Closes #<id>` trong mô tả để GitHub tự đóng Issue khi merge vào `develop`.
 - Ghi rõ thay đổi, lý do, cách kiểm thử và rủi ro.
 - Screenshot dùng cho kết quả trực quan, không thay thế test.
 
 ### Trách nhiệm của tác giả
 
 - Giữ Pull Request nhỏ và có một mục tiêu rõ.
+- Có thể mở Draft Pull Request sớm; chỉ chuyển sang Ready for review khi mô tả, code và kiểm thử
+  đã sẵn sàng, không còn conflict hoặc blocker đã biết.
+- Request ít nhất một reviewer sau khi Pull Request đã sẵn sàng.
 - Tự review toàn bộ tab `Files changed` trước khi gửi.
 - Báo rõ breaking change, migration, phần chưa test hoặc giới hạn hiện tại.
 - Trả lời review bằng context hoặc thay đổi cụ thể trước khi resolve comment.
 
 ### Trách nhiệm của reviewer
+
+- Reviewer phản hồi lần đầu trong vòng 24 giờ.
+- Nếu reviewer không thể phản hồi, tác giả có thể request thành viên khác.
+- Việc review được luân phiên; Team Lead không phải reviewer mặc định cho mọi Pull Request.
+- Thay đổi có rủi ro cao có thể yêu cầu reviewer thứ hai.
 
 Kiểm tra theo thứ tự ưu tiên:
 
@@ -201,9 +248,10 @@ theo dõi riêng. Không approve khi chưa hiểu phần có rủi ro chính.
 ### Điều kiện merge
 
 - Có ít nhất một approval từ reviewer ngoài tác giả.
-- CI thành công nếu project đã cấu hình workflow.
-- Blocking comments đã được xử lý.
+- Required status check `verify` thành công nếu project đã cấu hình workflow.
+- Không còn review yêu cầu thay đổi và tất cả conversations đã được resolve.
 - Sau thay đổi lớn, reviewer kiểm tra lại phần diff mới.
+- Kiểm thử cần thiết đã hoàn thành.
 - Branch công việc vào `develop` dùng squash merge.
 
 Không bỏ qua CI hoặc review chỉ để kịp deadline. Trường hợp khẩn cấp phải ghi lý do và tạo Issue
@@ -281,6 +329,7 @@ Một Issue là `Done` khi kết quả có thể chạy, review và bàn giao; k
 ### Code và review
 
 - [ ] Pull Request liên kết đúng Issue và chỉ tập trung vào một mục tiêu.
+- [ ] Pull Request đã merge vào đúng target branch.
 - [ ] Tác giả đã tự review diff.
 - [ ] Có ít nhất một approval và các comment đang block đã được xử lý.
 - [ ] Không còn debug code, dead code hoặc commented-out code không có lý do.
@@ -298,6 +347,137 @@ Một Issue là `Done` khi kết quả có thể chạy, review và bàn giao; k
 - [ ] README, API contract, diagram hoặc hướng dẫn chạy được cập nhật khi cần.
 - [ ] Thay đổi database có migration và cập nhật data model khi áp dụng.
 - [ ] Cấu hình môi trường không bị hardcode vào source code.
+- [ ] Issue đã được đóng và trạng thái trên GitHub Project đã chuyển sang `Done`.
 
 Project có thể dùng trạng thái `Accepted` sau khi demo cho giảng viên hoặc stakeholder. Việc chờ
 buổi demo không cần giữ một Pull Request đã đạt toàn bộ quality checks ở trạng thái mở.
+
+## Template có thể sao chép
+
+Các file trong `.github/` là bản có hiệu lực trên GitHub. Những block dưới đây phục vụ việc copy
+thủ công sang repository đã tồn tại; khi thay đổi template, cập nhật đồng thời cả hai vị trí.
+
+<details>
+<summary><code>.github/ISSUE_TEMPLATE/issue.md</code></summary>
+
+```md
+---
+name: Công việc
+about: Tạo tính năng, công việc kỹ thuật hoặc báo lỗi
+title: ""
+labels: ""
+assignees: ""
+---
+
+## Loại
+
+<!-- Giữ lại một loại. -->
+
+**Type:** `Feature` / `Bug` / `Task` / `Refactor` / `Test` / `Documentation`
+
+## Mục tiêu
+
+<!--
+Mô tả kết quả cần đạt và lý do.
+Ví dụ: Cho phép người dùng đăng nhập bằng email để sử dụng các chức năng yêu cầu xác thực.
+-->
+
+## Acceptance criteria
+
+<!--
+Mỗi tiêu chí cần cụ thể và có thể kiểm chứng.
+Ví dụ:
+- [ ] Đăng nhập thành công với email và mật khẩu hợp lệ.
+- [ ] Hiển thị thông báo khi thông tin đăng nhập không hợp lệ.
+-->
+
+- [ ]
+- [ ]
+
+## Cách xác minh
+
+<!--
+Ghi command hoặc các bước để reviewer kiểm tra.
+Ví dụ:
+1. Chạy `npm test`.
+2. Đăng nhập bằng tài khoản hợp lệ.
+3. Kiểm tra người dùng được chuyển đến trang chính.
+-->
+
+## Thông tin lỗi
+
+<!-- Xóa phần này nếu Issue không phải Bug. -->
+
+- Kết quả thực tế:
+- Kết quả mong đợi:
+- Các bước tái hiện:
+- Môi trường:
+- Severity: `Critical` / `High` / `Medium` / `Low`
+
+## Phạm vi và liên kết liên quan
+
+<!--
+Liên kết dependency, blocker, thiết kế, API contract hoặc Issue liên quan.
+Ví dụ: Depends on #12
+-->
+```
+
+</details>
+
+<details>
+<summary><code>.github/ISSUE_TEMPLATE/config.yml</code></summary>
+
+```yaml
+blank_issues_enabled: false
+contact_links: []
+```
+
+</details>
+
+<details>
+<summary><code>.github/PULL_REQUEST_TEMPLATE.md</code></summary>
+
+````md
+## Tóm tắt
+
+<!-- Vấn đề cần giải quyết và kết quả của thay đổi. -->
+
+## Issue liên quan
+
+Closes #
+
+<!-- PR vào develop sẽ tự đóng Issue sau khi merge vì develop là default branch. -->
+
+## Thay đổi chính
+
+-
+
+## Cách kiểm thử
+
+<!-- Ghi command có thể chạy lại và các bước manual test nếu áp dụng. -->
+
+```bash
+
+```
+
+## Bằng chứng
+
+<!-- CI report, command output, API response đã làm sạch, screenshot hoặc recording. -->
+
+## Rủi ro và ảnh hưởng
+
+<!-- Security, compatibility, migration, performance hoặc giới hạn còn lại. -->
+
+## Checklist của tác giả
+
+- [ ] Pull Request chỉ có một mục tiêu rõ ràng
+- [ ] Đã tự review tab `Files changed`
+- [ ] Test và tài liệu đã được cập nhật khi hành vi thay đổi
+- [ ] Không còn conflict, debug code, secret hoặc dữ liệu nhạy cảm
+
+## Reviewer cần chú ý
+
+<!-- Chỉ ra logic khó, quyết định không hiển nhiên hoặc khu vực rủi ro cao. -->
+````
+
+</details>
